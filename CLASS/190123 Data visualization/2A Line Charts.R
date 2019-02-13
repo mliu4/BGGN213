@@ -1,0 +1,2 @@
+weight <- read.table("bimm143_05_rstats/weight_chart.txt", header = TRUE)
+plot(y, type = "b", pch = 15, cex = 1.5, lwd = 2, ylim=c(2,10), xlab="Age (months)", ylab="Weight(kg)", main = "Average weight increase during childhood")
