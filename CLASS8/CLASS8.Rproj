@@ -1,0 +1,25 @@
+---
+title: "CLASS8"
+author: "Mengdan Liu"
+date: "February 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+OUR TURN TO TRY K MEAN ANALYSIS
+```{r}
+# Generate some example data for clustering
+tmp <- c(rnorm(30,-3), rnorm(30,3))
+x <- cbind(x=tmp, y=rev(tmp))
+plot(x)
+```
+
+```{r}
+y <- kmeans(x, centers = 2, nstart=20)
+y
+plot(x, col = km$cluster)
+```
+
+

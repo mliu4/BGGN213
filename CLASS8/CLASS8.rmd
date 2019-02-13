@@ -1,0 +1,118 @@
+---
+title: "CLASS8"
+author: "Mengdan Liu"
+date: "February 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+OUR TURN TO TRY K MEAN ANALYSIS
+```{r}
+# Generate some example data for clustering
+tmp <- c(rnorm(30,-3), rnorm(30,3))
+x <- cbind(x=tmp, y=rev(tmp))
+plot(x)
+```
+
+```{r}
+y <- kmeans(x, centers = 2, nstart=20)
+y
+plot(x, col = y$cluster)
+```
+The next one ot learn is hierarchical clustering in R
+```{r}
+# First we need to calculate point (dis)similarity
+# as the Euclidean distance between observations
+dist_matrix <- dist(x)
+# The hclust() function returns a hierarchical
+# clustering model
+hc <- hclust(d = dist_matrix)
+# the print method is not so useful here
+hc
+
+plot(hc)
+
+cutree(hc, h = 6)
+
+```
+
+Dendrograms appear to relate data points based on their proximity to a cluster. Clusters are formed based on relative euclidean distance. This is a problem related to linking methods. In other words, how the hcluster program makes groups. Taking a look at a few of them right now.
+
+```{r}
+hc.complete = hclust(d = dist_matrix, method = "complete")
+hc.average = hclust(d = dist_matrix, method = "average")
+hc.single = hclust(d = dist_matrix, method = "single")
+
+plot(hc.complete)
+plot(hc.average)
+plot(hc.single)
+```
+
+Time for some hands on work.
+
+```{r}
+# Step 1. Generate some example data for clustering
+x <- rbind(
+ matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), # c1
+ matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), # c2
+ matrix(c(rnorm(50, mean = 1, sd = 0.3), # c3
+ rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+# Step 2. Plot the data without clustering
+plot(x)
+# Step 3. Generate colors for known clusters
+# (just so we can compare to hclust results)
+col <- as.factor( rep(c("c1","c2","c3"), each=50) )
+plot(x, col=col)
+
+#QUESTION
+#Identify 2-3 clusters using hclust, dist, plot, and cutree
+dist_matrix2 <- dist(x)
+hc2 <- hclust(d=dist_matrix2, method = "complete")
+cut_hc2 <- cutree(hc2, h = 1.75)
+plot(hc2)
+cut_hc2
+plot(x, col=cut_hc2)
+```
+
+Moving onto PCA
+
+```{r}
+mydata <- read.csv("https://tinyurl.com/expression-CSV",
+ row.names=1) 
+head(mydata)
+```
+```{r}
+pca <- prcomp(t(mydata), scale=TRUE)
+summary(pca)
+plot(pca$x)
+```
+
+TIME FOR UNSUPERVISED WORK
+
+```{r}
+#READING DATA
+foo <- read.csv("data/UK_foods.csv", row.names=1)
+head(foo)
+```
+```{r}
+#OBSERVING DIFFERENCES IN DATA
+barplot(as.matrix(foo), beside = FALSE, col=rainbow(nrow(foo)))
+```
+```{r}
+pairs(foo, col=rainbow(10), pch=16)
+```
+
+```{r}
+pca <- prcomp(t(foo))
+summary(pca)
+```
+
+```{r}
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab="PC2", xlim=c(-270,500))
+col.vec <- c("orange", "red", "blue", "green")
+text(pca$x[,1], pca$x[,2], colnames(foo), col = col.vec)
+```
+
