@@ -1,2 +1,6 @@
 # BGGN213
 Foundations of Bioinformatics
+
+I'M MAKING SOME CHANGES AROUND HERE.
+IT'S GONNA BE BIG.
+GET A LOAD OF THIS
