@@ -1,0 +1,54 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##MXL genotype analysis
+How many G|G genotypes are there, in the MXL population
+```{r}
+##Reading in mxl population genome file.
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+```
+```{r}
+gg.pop <- mxl$Genotype..forward.strand.
+table(gg.pop) / nrow(mxl) *100
+```
+
+##FastQ quality scores
+```{r}
+#install.packages("seqinr")
+#install.packages("gtools")
+
+library("seqinr")
+library("gtools")
+
+chars <- s2c("DDDDCDEDCDDDDBBDDDCC@")
+chars
+phred <- asc(chars)-33
+phred
+```
+
+
+##Working on the final file
+```{r}
+expr <- read.table("rs8067378_ENSG00000172057.6.txt")
+table(expr$geno)
+```
+```{r}
+inds.gg <- expr$geno=="G/G"
+summary(expr[inds.gg,"exp"])
+
+inds.ag <- expr$geno=="A/G"
+summary(expr[inds.ag,"exp"])
+
+inds.aa <- expr$geno=="A/A"
+summary(expr[inds.aa,"exp"])
+```
+```{r}
+boxplot(exp~geno, data=expr)
+```
+
