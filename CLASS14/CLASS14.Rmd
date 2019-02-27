@@ -1,0 +1,170 @@
+---
+title: "CLASS14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Reading in CSV data on experimental dexamethasone treatments
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <- read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+```
+Examining data
+```{r}
+head(counts)
+head(metadata)
+```
+
+How many genes are in this dataset?
+```{r}
+nrow(counts)
+```
+
+
+
+Extracting controls
+```{r}
+control <- metadata[metadata[, "dex"]== "control",]
+control.mean <- rowSums(counts[,control$id])/ncol(control)
+names(control.mean) <- counts$ensgene
+```
+
+Extracting treated
+```{r}
+treated <- metadata[metadata[,"dex"]=="treated",]
+treated.mean <- rowSums(counts[,treated$id]/ncol(treated))
+names(treated.mean) <- counts$ensgene
+```
+
+Combining mean counts for record keeping purposes
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+```
+Checking sums of means of each patient group
+```{r}
+colSums(meancounts)
+```
+
+Creating a scatter plot of mean treated vs mean control.
+```{r}
+plot(meancounts$control.mean, meancounts$treated.mean)
+plot(meancounts$control.mean, meancounts$treated.mean, log="xy")
+```
+
+Switching to log2fold change to observe differentially expressing genes between the two populations. 
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+Getting rid of genes with means of zero. To avoid NaN problems. Barry's way.
+```{r}
+#Both means have to be nonzero, iterate and get a list of indices, excluding zero means in the indice list.
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+
+```
+
+```{r}
+up.ind <- mycounts$log2fc>2
+down.ind <- mycounts$log2fc<2
+
+table(up.ind)
+table(down.ind)
+```
+
+##Annotations
+
+```{r}
+anno <- read.csv("annotables_grch38.csv")
+head(anno)
+```
+Checking anno dimensions
+```{r}
+dim(anno)
+```
+Let's try out the **merge()** function to add the annotation data to our **mycounts** results.
+
+```{r}
+mycounts.anno <- merge(x=mycounts, y = anno, by.x = "row.names", by.y = "ensgene")
+head(mycounts.anno)
+```
+
+Trying out BioConductor annotation packages
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite("AnnotationDbi")
+biocLite("org.Hs.eg.db")
+
+```
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+
+```{r}
+columns(org.Hs.eg.db)
+```
+
+```{r}
+mycounts$symbol <- mapIds(org.Hs.eg.db,
+                     keys=row.names(mycounts),
+                     column="SYMBOL",
+                     keytype="ENSEMBL",
+                     multiVals="first")
+```
+
+
+##Moving onto DESeq2
+Initializing DESeq2
+```{r}
+library(DESeq2)
+citation("DESeq2")
+
+```
+
+Build a DEseq dataset
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+Run a DESeq Analysis
+```{r}
+dds <- DESeq(dds)
+```
+
+Getting our results
+```{r}
+res <- results(dds)
+res
+```
+
+Analyzing results
+```{r}
+summary(res)
+```
+
+##Volcano plots
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+Adding Color to it
+```{r}
+mycols <- rep("gray", nrow(res))
+mycols[abs(res$log2FoldChange)>2]="red"
+subset.inds <- res$padj<.01&abs(res$log2FoldChange)>2
+mycols[subset.inds] <- "blue"
+plot(res$log2FoldChange, -log(res$padj), col = mycols)
+```
+
