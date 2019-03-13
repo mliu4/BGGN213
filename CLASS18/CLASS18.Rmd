@@ -1,0 +1,27 @@
+---
+title: "CLASS18"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Lecture 18 - Creating a personalized cancer vaccine
+Reading patient data from FASTA
+
+```{r}
+library(bio3d)
+```
+
+
+```{r}
+patient.fasta <- read.fasta("lecture18_sequences.fa")
+alignment <- seqaln(patient.fasta, patient.fasta$id)
+misID <- conserv(alignment, method = "identity")
+indices <- which(misID<1)
+
+mers <- patient.fasta$ali[,(indices[1]-8):(indices[1]+8)]
+mers
+```
+

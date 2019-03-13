@@ -1,0 +1,207 @@
+---
+title: "CLASS15"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##DIFFERENTIAL SEQUENCE EXPRESSION
+Loading DESeq2 for use
+```{r message=FALSE}
+library(DESeq2)
+```
+Loading our data files
+```{r}
+metaFile <- "GSE37704_metadata.csv"
+countFile <- "GSE37704_featurecounts.csv"
+
+#Importing Metadata
+colData <- read.csv(metaFile, row.names = 1)
+head(colData)
+```
+```{r}
+#Importing CountData
+countData <- read.csv(countFile, row.names=1)
+head(countData)
+```
+
+>Removing the troublesome length column
+
+```{r}
+#Identifying the qualities of our count data set
+dim(countData)
+
+#Adjusting the dimensions of countData
+countData <- as.matrix(countData[,-1])
+head(countData)
+```
+
+```{r}
+#Checking if dimensions match up properly
+all(rownames(colData)==colnames(countData))
+```
+
+>Filter out rows in countData with no data in them
+
+```{r}
+#rowSums to identify rows that are greater than zero, moving those rows into a new vector and applying 
+countData2 <- countData[rowSums(countData)>0,]
+```
+
+##Runing DESeq2
+
+```{r}
+dds = DESeqDataSetFromMatrix(countData=countData,
+                             colData=colData,
+                             design=~condition)
+dds = DESeq(dds)
+
+dds
+
+```
+Getting our results
+```{r}
+res = results(dds, contrast=c("condition", "hoxa1_kd", "control_sirna"))
+res
+```
+
+Plotting our results
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+Coloring the plot
+```{r}
+mycol <-  rep("gray", nrow(res))
+#Adjust color scheme by applying rules to color vector which is based on the result vector
+mycol[abs(res$log2FoldChange)>2] <- "red"
+mycol[abs(res$log2FoldChange)>2 & res$padj<.01] <- "blue"
+
+plot(res$log2FoldChange, -log(res$padj), col = mycol)
+```
+
+##Adding gene annotations to our results
+
+>Add SYMBOL, ENTREZID, and GENENAME annotations to the results file using the Bioconductor mapID() function.
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    keytype="ENSEMBL",
+                    column="SYMBOL",
+                    multiVals="first")
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="GENENAME",
+                    multiVals="first")
+
+head(res, 10)
+```
+
+
+Writing our results to a csv file
+```{r}
+#Ordering by pvalues
+res = res[order(res$pvalue),]
+write.csv(res, file="deseq_results.csv")
+```
+
+
+##KEGG pathways
+
+Installing necessary packages. Will be commented out in final document.
+
+```{r}
+#source("http://bioconductor.org/biocLite.R")
+#biocLite( c("pathview", "gage", "gageData") )
+```
+
+Loading KEGG Pathway function
+```{r}
+library(pathview)
+```
+Loading additional functions and setting KEGG to use relevant pathways
+```{r}
+library(gage)
+library(gageData)
+
+data(kegg.sets.hs)
+data(sigmet.idx.hs)
+
+# Focus on signaling and metabolic pathways only
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs]
+
+# Examine the first 3 pathways
+head(kegg.sets.hs, 3)
+```
+
+Setting up inputs for **gage()** function
+```{r}
+foldchanges=res$log2FoldChange
+names(foldchanges)=res$entrez
+head(foldchanges)
+```
+
+Time to get our results from the function
+```{r}
+# Get the results
+keggres = gage(foldchanges, gsets=kegg.sets.hs)
+```
+```{r}
+attributes(keggres)
+head(keggres$less)
+```
+
+Creating a pathview map
+```{r}
+pathview(gene.data=foldchanges, pathway.id="hsa04110")
+```
+
+Inserting the pathviewmap into our notebook
+
+![](hsa04110.pathview.png)
+
+```{r}
+# A different PDF based output of the same data
+pathview(gene.data=foldchanges, pathway.id="hsa04110", kegg.native=FALSE)
+```
+```{r}
+## Focus on top 5 upregulated pathways here for demo purposes only
+keggrespathways <- rownames(keggres$greater)[1:5]
+
+# Extract the 8 character long IDs part of each string
+keggresids = substr(keggrespathways, start=1, stop=8)
+keggresids
+```
+```{r}
+pathview(gene.data=foldchanges, pathway.id=keggresids, species="hsa")
+```
+
+##Gene Ontology
+```{r}
+data(go.sets.hs)
+data(go.subs.hs)
+
+# Focus on Biological Process subset of GO
+gobpsets = go.sets.hs[go.subs.hs$BP]
+
+gobpres = gage(foldchanges, gsets=gobpsets, same.dir=TRUE)
+
+lapply(gobpres, head)
+```
+
