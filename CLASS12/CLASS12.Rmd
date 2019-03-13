@@ -1,5 +1,5 @@
 ---
-title: "Class12: Structural Bionformatics (Part2) for drug discovery"
+title: "Class11&12: Structural Bionformatics (Part2) for drug discovery"
 output: github_document
 ---
 
