@@ -1,76 +1,132 @@
----
-title: "Class 6 R Functions"
-author: "MENGDAN LIU"
-date: "January 25, 2019"
-output: github_document
----
+Class 6 R Functions
+================
+MENGDAN LIU
+January 25, 2019
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 Time to learn about **read.table** and its friends.
 
 Inserting a code chunk
-```{r}
+
+``` r
 read.table("https://bioboot.github.io/bggn213_S18/class-material/test1.txt", header = TRUE, sep = ",")
 ```
-```{r}
+
+    ##   Col1 Col2 Col3
+    ## 1    1    2    3
+    ## 2    4    5    6
+    ## 3    7    8    9
+    ## 4    a    b    c
+
+``` r
 file1 <- "https://bioboot.github.io/bggn213_S18/class-material/test1.txt"
 read.csv(file1)
 ```
-```{r}
+
+    ##   Col1 Col2 Col3
+    ## 1    1    2    3
+    ## 2    4    5    6
+    ## 3    7    8    9
+    ## 4    a    b    c
+
+``` r
 file2 <- "https://bioboot.github.io/bggn213_S18/class-material/test2.txt"
 file3 <- "https://bioboot.github.io/bggn213_S18/class-material/test3.txt"
 read.table(file2, header = TRUE, sep = "$")
+```
+
+    ##   Col1 Col2 Col3
+    ## 1    1    2    3
+    ## 2    4    5    6
+    ## 3    7    8    9
+    ## 4    a    b    c
+
+``` r
 read.table(file3)
 ```
 
-##R functions
-```{r}
+    ##   V1 V2 V3
+    ## 1  1  6  a
+    ## 2  2  7  b
+    ## 3  3  8  c
+    ## 4  4  9  d
+    ## 5  5 10  e
+
+R functions
+-----------
+
+``` r
 add <- function(x, y=1){
   return(x+y)
 }
 ```
+
 Let's use our useless function
-```{r}
+
+``` r
 #Return 2
 add(1)
+```
+
+    ## [1] 2
+
+``` r
 #Return 3
 add(1+2)
+```
+
+    ## [1] 4
+
+``` r
 #It can do vectors too
 add(c(1,2,3,4))
+```
+
+    ## [1] 2 3 4 5
+
+``` r
 #WOW
 add(c(1,2,3,4), c(1,2,3,4))
 ```
-#Why use a function?
-Functions let us repeat important operations without having to type them out every time.
-It's like getting a cloth towel to wipe up spills instead of using a whole bunch of paper towel rolls. YOu can always wash the cloth towel and use it again for the same purpose.
+
+    ## [1] 2 4 6 8
+
+Why use a function?
+===================
+
+Functions let us repeat important operations without having to type them out every time. It's like getting a cloth towel to wipe up spills instead of using a whole bunch of paper towel rolls. YOu can always wash the cloth towel and use it again for the same purpose.
 
 Here's an example function
-```{r}
+
+``` r
 Normalize <- function(inputDf, col){
   inputDf <- (inputDf$col-min(inputDf$col))/(max(inputDf$col)-min(inputDf$col))
   return(inputDf)
 }
 ```
+
 But this can be done better. After some optimizations, we get this:
-```{r}
+
+``` r
 rescale2 <- function(x){
   rng <- range(x)
   x <- (x- rng[1])/(rng[2]-rng[1])
   return <- x
 }
 ```
+
 Further optimizations can be acconted for. Like covering NA data entries
-```{r}
+
+``` r
 rescale2 <- function(x){
   rng <- range(x, na.rm = TRUE)
   x <- (x-rng[1])/(rng[2]-rng[1])
   return(x)
 }
 ```
+
 We can do even better.
-```{r}
+
+``` r
 rescale3 <- function(x, na.rm=TRUE, plot=FALSE) {
  if(na.rm) {
  rng <-range(x, na.rm=na.rm)
@@ -87,11 +143,16 @@ rescale3 <- function(x, na.rm=TRUE, plot=FALSE) {
  return(answer)
 }
 ```
+
 Okay, time for in class lab stuff.
 
-##HANDS ON LAB SECTION
-##SECTION 1A
-```{r}
+HANDS ON LAB SECTION
+--------------------
+
+SECTION 1A
+----------
+
+``` r
 df <- data.frame(a=1:10, b=seq(200,400,length=10),c=11:20,d=NA)
 
 fixer <- function(x, na.rm=TRUE){
@@ -106,9 +167,18 @@ for(i in df){
 }
 ```
 
-##SECTION 1B
-```{r}
+    ##  [1] 0.0000000 0.1111111 0.2222222 0.3333333 0.4444444 0.5555556 0.6666667
+    ##  [8] 0.7777778 0.8888889 1.0000000
+    ##  [1] 0.0000000 0.1111111 0.2222222 0.3333333 0.4444444 0.5555556 0.6666667
+    ##  [8] 0.7777778 0.8888889 1.0000000
+    ##  [1] 0.0000000 0.1111111 0.2222222 0.3333333 0.4444444 0.5555556 0.6666667
+    ##  [8] 0.7777778 0.8888889 1.0000000
+    ##  [1] NA NA NA NA NA NA NA NA NA NA
 
+SECTION 1B
+----------
+
+``` r
 #Function relies on functions from bio3d library.
 library(bio3d)
 
@@ -127,6 +197,6 @@ plot.Achain.BFactor <- function(pdbNum){
 plot.Achain.BFactor("4AKE")
 ```
 
+    ##   Note: Accessing on-line PDB file
 
-
-
+![](class2_files/figure-markdown_github/unnamed-chunk-11-1.png)
